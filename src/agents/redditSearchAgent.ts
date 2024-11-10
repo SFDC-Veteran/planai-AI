@@ -22,24 +22,24 @@ import logger from '../utils/logger';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 
 const basicRedditSearchRetrieverPrompt = `
-You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the web for information.
-If it is a writing task or a simple hi, hello rather than a question, you need to return \`not_needed\` as the response.
+아래 대화 내용과 후속 질문이 주어집니다. 후속 질문을 독립적인 질문으로 재구성하여 LLM이 웹에서 관련 정보를 검색할 수 있도록 해야 합니다.
+후속 질문이 단순한 인사나 글쓰기 작업일 경우, \`not_needed\`라는 응답을 반환합니다.
 
-Example:
-1. Follow up question: Which company is most likely to create an AGI
-Rephrased: Which company is most likely to create an AGI
+예시:
+1. 후속 질문: 어떤 회사가 AGI를 만들 가능성이 가장 높은가요?
+재구성: AGI를 만들 가능성이 가장 높은 회사는?
 
-2. Follow up question: Is Earth flat?
-Rephrased: Is Earth flat?
+2. 후속 질문: 지구는 평평한가요?
+재구성: 지구는 평평한가요?
 
-3. Follow up question: Is there life on Mars?
-Rephrased: Is there life on Mars?
+3. 후속 질문: 화성에 생명체가 있나요?
+재구성: 화성에 생명체가 존재하나요?
 
-Conversation:
+대화:
 {chat_history}
 
-Follow up question: {query}
-Rephrased question:
+후속 질문: {query}
+재구성된 질문:
 `;
 
 const basicRedditSearchResponsePrompt = `
@@ -51,9 +51,9 @@ const basicRedditSearchResponsePrompt = `
     Your responses should be medium to long in length be informative and relevant to the user's query. You can use markdowns to format your response. You should use bullet points to list the information. Make sure the answer is not short and is informative.
     You have to cite the answer using [number] notation. You must cite the sentences with their relevent context number. You must cite each and every part of the answer so the user can know where the information is coming from.
     Place these citations at the end of that particular sentence. You can cite the same sentence multiple times if it is relevant to the user's query like [number1][number2].
-    However you do not need to cite it using the same number. You can use different numbers to cite the same sentence multiple times. The number refers to the number of the search result (passed in the context) used to generate that part of the answer.
+    However, you do not need to cite it using the same number. You can use different numbers to cite the same sentence multiple times. The number refers to the number of the search result (passed in the context) used to generate that part of the answer.
 
-    Anything inside the following \`context\` HTML block provided below is for your knowledge returned by Reddit and is not shared by the user. You have to answer question on the basis of it and cite the relevant information from it but you do not have to
+    Anything inside the following \`context\` HTML block provided below is for your knowledge returned by Reddit and is not shared by the user. You have to answer question on the basis of it and cite the relevant information from it, but you do not have to
     talk about the context in your response.
 
     <context>

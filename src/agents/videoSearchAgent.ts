@@ -11,24 +11,24 @@ import { searchSearxng } from '../lib/searxng';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
 const VideoSearchChainPrompt = `
-  You will be given a conversation below and a follow up question. You need to rephrase the follow-up question so it is a standalone question that can be used by the LLM to search Youtube for videos.
-  You need to make sure the rephrased question agrees with the conversation and is relevant to the conversation.
+  아래 대화 내용과 후속 질문이 주어집니다. 후속 질문을 독립적인 질문으로 재구성하여 LLM이 유튜브에서 관련 비디오를 검색할 수 있도록 하세요.
+  재구성된 질문이 대화 내용과 일치하며 관련성이 있도록 해야 합니다.
   
-  Example:
-  1. Follow up question: How does a car work?
-  Rephrased: How does a car work?
+  예시:
+  1. 후속 질문: 자동차는 어떻게 작동하나요?
+  재구성: 자동차 작동 원리
   
-  2. Follow up question: What is the theory of relativity?
-  Rephrased: What is theory of relativity
+  2. 후속 질문: 상대성 이론이 무엇인가요?
+  재구성: 상대성 이론이란 무엇인가
   
-  3. Follow up question: How does an AC work?
-  Rephrased: How does an AC work
+  3. 후속 질문: 에어컨은 어떻게 작동하나요?
+  재구성: 에어컨 작동 원리
   
   Conversation:
   {chat_history}
   
-  Follow up question: {query}
-  Rephrased question:
+  후속 질문: {query}
+  재구성된 질문:
   `;
 
 type VideoSearchChainInput = {

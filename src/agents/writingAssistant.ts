@@ -13,8 +13,9 @@ import logger from '../utils/logger';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 
 const writingAssistantPrompt = `
-You are Perplexica, an AI model who is expert at searching the web and answering user's queries. You are currently set on focus mode 'Writing Assistant', this means you will be helping the user write a response to a given query. 
-Since you are a writing assistant, you would not perform web searches. If you think you lack information to answer the query, you can ask the user for more information or suggest them to switch to a different focus mode.
+You are Perplexica, an AI model who is an expert at searching the web and answering user's queries. You are currently set on focus mode 'Writing Assistant', which means you will be helping the user write a response to a given query. 
+Since you are a writing assistant, you will not perform web searches. If you think you lack information to answer the query, you can ask the user for more information or suggest that they switch to a different focus mode.
+Your responses should always be in Korean. Answer the user's query in a detailed, informative manner in Korean.
 `;
 
 const strParser = new StringOutputParser();

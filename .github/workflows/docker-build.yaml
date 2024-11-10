@@ -1,9 +1,9 @@
-name: Build & Push Docker Images
+name: Build & Push Docker Images to EC2
 
 on:
   push:
     branches:
-      - master
+      - main
   release:
     types: [published]
 
@@ -25,49 +25,30 @@ jobs:
         with:
           install: true
 
-      - name: Log in to DockerHub
+      - name: SSH to EC2 and Build Docker Image
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ec2-user/app
+            docker build -f backend.dockerfile -t itzcrazykns1337/perplexica-backend:latest .  # backend 이미지 빌드
+            docker build -f app.dockerfile -t itzcrazykns1337/perplexica-frontend:latest .  # frontend 이미지 빌드
+            docker-compose up -d
+
+      - name: Push Docker images to Docker Hub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract version from release tag
-        if: github.event_name == 'release'
-        id: version
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-
-      - name: Build and push Docker image for ${{ matrix.service }}
-        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+      - name: Push Backend Image
         run: |
-          docker buildx create --use
-          if [[ "${{ matrix.service }}" == "backend" ]]; then \
-            DOCKERFILE=backend.dockerfile; \
-            IMAGE_NAME=perplexica-backend; \
-          else \
-            DOCKERFILE=app.dockerfile; \
-            IMAGE_NAME=perplexica-frontend; \
-          fi
-          docker buildx build --platform linux/amd64,linux/arm64 \
-            --cache-from=type=registry,ref=itzcrazykns1337/${IMAGE_NAME}:main \
-            --cache-to=type=inline \
-            -f $DOCKERFILE \
-            -t itzcrazykns1337/${IMAGE_NAME}:main \
-            --push .
+          docker tag itzcrazykns1337/perplexica-backend:latest ${{ secrets.DOCKER_USERNAME }}/perplexica-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/perplexica-backend:latest
 
-      - name: Build and push release Docker image for ${{ matrix.service }}
-        if: github.event_name == 'release'
+      - name: Push Frontend Image
         run: |
-          docker buildx create --use
-          if [[ "${{ matrix.service }}" == "backend" ]]; then \
-            DOCKERFILE=backend.dockerfile; \
-            IMAGE_NAME=perplexica-backend; \
-          else \
-            DOCKERFILE=app.dockerfile; \
-            IMAGE_NAME=perplexica-frontend; \
-          fi
-          docker buildx build --platform linux/amd64,linux/arm64 \
-            --cache-from=type=registry,ref=itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }} \
-            --cache-to=type=inline \
-            -f $DOCKERFILE \
-            -t itzcrazykns1337/${IMAGE_NAME}:${{ env.RELEASE_VERSION }} \
-            --push .
+          docker tag itzcrazykns1337/perplexica-frontend:latest ${{ secrets.DOCKER_USERNAME }}/perplexica-frontend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/perplexica-frontend:latest

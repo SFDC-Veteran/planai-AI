@@ -11,24 +11,24 @@ import { searchSearxng } from '../lib/searxng';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 
 const imageSearchChainPrompt = `
-You will be given a conversation below and a follow up question. You need to rephrase the follow-up question so it is a standalone question that can be used by the LLM to search the web for images.
-You need to make sure the rephrased question agrees with the conversation and is relevant to the conversation.
+아래 대화 내용과 후속 질문이 주어집니다. 후속 질문을 독립적인 질문으로 재구성하여 LLM이 웹에서 이미지를 검색할 수 있도록 해야 합니다.
+재구성된 질문이 대화 내용과 일치하고 관련성이 있어야 합니다.
 
-Example:
-1. Follow up question: What is a cat?
-Rephrased: A cat
+예시:
+1. 후속 질문: 고양이가 무엇인가요?
+재구성: 고양이
 
-2. Follow up question: What is a car? How does it works?
-Rephrased: Car working
+2. 후속 질문: 자동차가 무엇인가요? 어떻게 작동하나요?
+재구성: 자동차 작동
 
-3. Follow up question: How does an AC work?
-Rephrased: AC working
+3. 후속 질문: 에어컨은 어떻게 작동하나요?
+재구성: 에어컨 작동
 
-Conversation:
+대화:
 {chat_history}
 
-Follow up question: {query}
-Rephrased question:
+후속 질문: {query}
+재구성된 질문:
 `;
 
 type ImageSearchChainInput = {

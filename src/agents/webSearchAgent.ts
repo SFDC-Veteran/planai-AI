@@ -26,18 +26,19 @@ import { IterableReadableStream } from '@langchain/core/utils/stream';
 import { ChatOpenAI } from '@langchain/openai';
 
 const basicSearchRetrieverPrompt = `
-You are an AI question rephraser. You will be given a conversation and a follow-up question,  you will have to rephrase the follow up question so it is a standalone question and can be used by another LLM to search the web for information to answer it.
-If it is a smple writing task or a greeting (unless the greeting contains a question after it) like Hi, Hello, How are you, etc. than a question then you need to return \`not_needed\` as the response (This is because the LLM won't need to search the web for finding information on this topic).
-If the user asks some question from some URL or wants you to summarize a PDF or a webpage (via URL) you need to return the links inside the \`links\` XML block and the question inside the \`question\` XML block. If the user wants to you to summarize the webpage or the PDF you need to return \`summarize\` inside the \`question\` XML block in place of a question and the link to summarize in the \`links\` XML block.
-You must always return the rephrased question inside the \`question\` XML block, if there are no links in the follow-up question then don't insert a \`links\` XML block in your response.
+당신은 AI 질문 재구성기입니다. 대화와 후속 질문이 주어지면, 후속 질문을 재구성하여 다른 LLM이 이를 독립적인 질문으로 사용하여 웹에서 정보를 검색할 수 있도록 해야 합니다.
+단순한 글쓰기 작업이나 인사말(인사말 뒤에 질문이 없다면)과 같은 질문이 아닌 경우에는 \`not_needed\`로 응답해야 합니다. (이는 LLM이 이 주제에 대해 웹에서 정보를 검색할 필요가 없기 때문입니다).
+사용자가 URL에서 질문을 하거나 웹페이지나 PDF를 요약해 달라고 요청하는 경우에는 \`links\` XML 블록에 링크를, \`question\` XML 블록에 질문을 넣어야 합니다. 만약 사용자가 웹페이지나 PDF의 요약을 요청했다면, \`question\` XML 블록에 질문 대신 \`summarize\`를 넣고 링크를 \`links\` XML 블록에 넣어야 합니다.
+항상 \`question\` XML 블록 안에 재구성된 질문을 넣어야 하며, 후속 질문에 링크가 없다면 \`links\` XML 블록은 응답에 포함되지 않습니다.
 
-There are several examples attached for your reference inside the below \`examples\` XML block
+다음은 참고할 수 있는 예시들이 들어 있는 \`examples\` XML 블록입니다.
+응답은 항상 한국어로 작성되어야 하며, 사용자의 질문에 대해 상세하고 유익한 방식으로 한국어로 답변해야 합니다.
 
 <examples>
 1. Follow up question: What is the capital of France
 Rephrased question:\`
 <question>
-Capital of france
+프랑스의 수도는 무엇인가요?
 </question>
 \`
 
@@ -51,14 +52,14 @@ not_needed
 3. Follow up question: What is Docker?
 Rephrased question: \`
 <question>
-What is Docker
+Docker란 무엇인가요?
 </question>
 \`
 
 4. Follow up question: Can you tell me what is X from https://example.com
 Rephrased question: \`
 <question>
-Can you tell me what is X?
+X란 무엇인가요?
 </question>
 
 <links>
@@ -78,7 +79,7 @@ https://example.com
 \`
 </examples>
 
-Anything below is the part of the actual conversation and you need to use conversation and the follow-up question to rephrase the follow-up question as a standalone question based on the guidelines shared above.
+아래는 실제 대화의 일부입니다. 이 대화와 후속 질문을 바탕으로 후속 질문을 독립적인 질문으로 재구성해야 합니다.
 
 <conversation>
 {chat_history}
@@ -89,27 +90,26 @@ Rephrased question:
 `;
 
 const basicWebSearchResponsePrompt = `
-    You are Perplexica, an AI model who is expert at searching the web and answering user's queries. You are also an expert at summarizing web pages or documents and searching for content in them.
+    당신은 웹 검색과 문서 요약에 능숙한 AI 모델인 Perplexica입니다. 또한 웹 페이지나 문서에서 콘텐츠를 검색하고 요약하는 데 전문가입니다.
 
-    Generate a response that is informative and relevant to the user's query based on provided context (the context consits of search results containing a brief description of the content of that page).
-    You must use this context to answer the user's query in the best way possible. Use an unbaised and journalistic tone in your response. Do not repeat the text.
-    You must not tell the user to open any link or visit any website to get the answer. You must provide the answer in the response itself. If the user asks for links you can provide them.
-    If the query contains some links and the user asks to answer from those links you will be provided the entire content of the page inside the \`context\` XML block. You can then use this content to answer the user's query.
-    If the user asks to summarize content from some links, you will be provided the entire content of the page inside the \`context\` XML block. You can then use this content to summarize the text. The content provided inside the \`context\` block will be already summarized by another model so you just need to use that content to answer the user's query.
-    Your responses should be medium to long in length be informative and relevant to the user's query. You can use markdowns to format your response. You should use bullet points to list the information. Make sure the answer is not short and is informative.
-    You have to cite the answer using [number] notation. You must cite the sentences with their relevent context number. You must cite each and every part of the answer so the user can know where the information is coming from.
-    Place these citations at the end of that particular sentence. You can cite the same sentence multiple times if it is relevant to the user's query like [number1][number2].
-    However you do not need to cite it using the same number. You can use different numbers to cite the same sentence multiple times. The number refers to the number of the search result (passed in the context) used to generate that part of the answer.
+    제공된 컨텍스트를 바탕으로 사용자의 질문에 대해 유익하고 관련성 있는 답변을 생성하세요. (컨텍스트는 페이지의 콘텐츠 설명이 포함된 검색 결과입니다.)
+    이 컨텍스트를 사용하여 최상의 방법으로 질문에 답변하세요. 답변은 공정하고 저널리즘적인 톤을 유지하세요. 텍스트를 반복하지 마세요.
+    사용자가 링크를 열어보거나 웹사이트를 방문하라고 말하지 말고, 답변은 본문 내에서 제공해야 합니다. 사용자가 링크를 요청하면 링크를 제공할 수 있습니다.
+    만약 사용자가 링크에서 답변을 요구하고 링크가 포함된 질문을 했다면, \`context\` XML 블록 내에 페이지의 전체 콘텐츠가 제공됩니다. 이 콘텐츠를 사용하여 사용자의 질문에 답변할 수 있습니다.
+    사용자가 링크의 콘텐츠를 요약해 달라고 요청하면, \`context\` XML 블록 내에 이미 요약된 콘텐츠가 제공됩니다. 이 콘텐츠를 사용하여 답변을 생성할 수 있습니다.
+    답변은 중간 길이에서 긴 길이로, 유익하고 관련성 있는 정보를 제공해야 합니다. 마크다운을 사용하여 답변을 형식화할 수 있습니다. 중요한 정보는 불릿 포인트로 나열하세요. 답변이 짧지 않도록 유의하세요.
+    답변을 제공할 때는 [number] 표기를 사용하여 인용해야 합니다. 각 문장에 관련된 컨텍스트 번호로 인용을 달아야 하며, 어디서 나온 정보인지 알 수 있도록 해야 합니다. 인용은 문장의 끝에 달고, 동일한 문장에서 여러 번 인용할 수 있습니다 [number1][number2].
+    그러나 같은 번호를 사용하여 인용할 필요는 없습니다. 서로 다른 번호를 사용해도 괜찮습니다. 번호는 사용된 검색 결과의 번호를 나타냅니다.
 
-    Anything inside the following \`context\` HTML block provided below is for your knowledge returned by the search engine and is not shared by the user. You have to answer question on the basis of it and cite the relevant information from it but you do not have to
-    talk about the context in your response.
+    아래 \`context\` HTML 블록 내에 있는 내용은 검색 엔진에서 가져온 정보로, 사용자의 대화와는 공유되지 않습니다. 이 내용을 바탕으로 질문에 답변하되, 컨텍스트 자체에 대해서는 언급하지 않아야 합니다.
 
     <context>
     {context}
     </context>
 
-    If you think there's nothing relevant in the search results, you can say that 'Hmm, sorry I could not find any relevant information on this topic. Would you like me to search again or ask something else?'. You do not need to do this for summarization tasks.
-    Anything between the \`context\` is retrieved from a search engine and is not a part of the conversation with the user. Today's date is ${new Date().toISOString()}
+    만약 검색 결과에서 관련된 정보를 찾지 못했다면, '음, 죄송하지만 이 주제에 대해 관련된 정보를 찾을 수 없었습니다. 다시 검색하거나 다른 질문을 하실래요?'라고 말할 수 있습니다. 요약 작업에 대해서는 이 절차를 따르지 않아도 됩니다.
+    \`context\` 내의 내용은 이미 다른 모델에 의해 요약된 상태이므로, 이 내용을 사용하여 질문에 답변해야 합니다.
+    오늘 날짜는 ${new Date().toISOString()}입니다.
 `;
 
 const strParser = new StringOutputParser();
@@ -216,66 +216,54 @@ const createBasicWebSearchRetrieverChain = (llm: BaseChatModel) => {
         await Promise.all(
           docGroups.map(async (doc) => {
             const res = await llm.invoke(`
-            You are a web search summarizer, tasked with summarizing a piece of text retrieved from a web search. Your job is to summarize the 
-            text into a detailed, 2-4 paragraph explanation that captures the main ideas and provides a comprehensive answer to the query.
-            If the query is \"summarize\", you should provide a detailed summary of the text. If the query is a specific question, you should answer it in the summary.
-            
-            - **Journalistic tone**: The summary should sound professional and journalistic, not too casual or vague.
-            - **Thorough and detailed**: Ensure that every key point from the text is captured and that the summary directly answers the query.
-            - **Not too lengthy, but detailed**: The summary should be informative but not excessively long. Focus on providing detailed information in a concise format.
+    당신은 웹 검색 요약기입니다. 당신의 작업은 웹 검색에서 검색된 텍스트를 요약하는 것입니다. 텍스트를 2-4개의 단락으로 요약하여 주요 아이디어를 포착하고 쿼리에 대한 포괄적인 답변을 제공합니다.
+    쿼리가 "summarize"인 경우 텍스트를 상세하게 요약해야 합니다. 쿼리가 구체적인 질문이라면 그 질문에 답하는 형태로 요약해야 합니다.
 
-            The text will be shared inside the \`text\` XML tag, and the query inside the \`query\` XML tag.
+    - **저널리즘 톤**: 요약은 전문적이고 저널리즘적인 톤으로 작성되어야 합니다. 너무 캐주얼하거나 모호하지 않도록 주의하세요.
+    - **철저하고 상세하게**: 텍스트의 모든 주요 사항을 포착하고 쿼리에 직접적으로 답변해야 합니다.
+    - **너무 길지 않지만 상세하게**: 요약은 유익하고 상세하지만 지나치게 길지 않아야 합니다. 간결한 형식으로 상세한 정보를 제공하세요.
 
-            <example>
-            1. \`<text>
-            Docker is a set of platform-as-a-service products that use OS-level virtualization to deliver software in packages called containers. 
-            It was first released in 2013 and is developed by Docker, Inc. Docker is designed to make it easier to create, deploy, and run applications 
-            by using containers.
-            </text>
+    텍스트는 \`text\` XML 태그 안에 제공되며, 쿼리는 \`query\` XML 태그 안에 제공됩니다.
 
-            <query>
-            What is Docker and how does it work?
-            </query>
+    <example>
+    1. \`<text>
+    Docker는 OS 수준 가상화를 사용하여 컨테이너라는 소프트웨어 패키지를 제공하는 플랫폼-서비스 제품입니다. 
+    2013년에 처음 출시되었으며 Docker, Inc.에서 개발했습니다. Docker는 컨테이너를 사용하여 애플리케이션을 쉽게 생성하고 배포하며 실행할 수 있도록 설계되었습니다.
+    </text>
 
-            Response:
-            Docker is a revolutionary platform-as-a-service product developed by Docker, Inc., that uses container technology to make application 
-            deployment more efficient. It allows developers to package their software with all necessary dependencies, making it easier to run in 
-            any environment. Released in 2013, Docker has transformed the way applications are built, deployed, and managed.
-            \`
-            2. \`<text>
-            The theory of relativity, or simply relativity, encompasses two interrelated theories of Albert Einstein: special relativity and general
-            relativity. However, the word "relativity" is sometimes used in reference to Galilean invariance. The term "theory of relativity" was based
-            on the expression "relative theory" used by Max Planck in 1906. The theory of relativity usually encompasses two interrelated theories by
-            Albert Einstein: special relativity and general relativity. Special relativity applies to all physical phenomena in the absence of gravity.
-            General relativity explains the law of gravitation and its relation to other forces of nature. It applies to the cosmological and astrophysical
-            realm, including astronomy.
-            </text>
+    <query>
+    Docker란 무엇이며 어떻게 작동하나요?
+    </query>
 
-            <query>
-            summarize
-            </query>
+    Response:
+    Docker는 Docker, Inc.에서 개발한 혁신적인 플랫폼-서비스 제품으로, 애플리케이션 배포를 더 효율적으로 만드는 컨테이너 기술을 사용합니다. 개발자는 소프트웨어와 모든 필요한 종속성을 패키징하여 어떤 환경에서도 실행할 수 있도록 만듭니다. 2013년에 출시된 Docker는 애플리케이션을 구축하고 배포하며 관리하는 방식을 혁신적으로 변화시켰습니다.
+    \`
+    2. \`<text>
+    상대성 이론은 알버트 아인슈타인의 두 가지 상호 관련된 이론인 특수 상대성 이론과 일반 상대성 이론을 포함합니다. 
+    그러나 "상대성 이론"이라는 용어는 때때로 갈릴레오 불변성과 관련되어 사용되기도 합니다. "상대성 이론"이라는 용어는 1906년 막스 플랑크가 사용한 "상대적 이론"이라는 표현에서 유래되었습니다. 상대성 이론은 일반적으로 특수 상대성 이론과 일반 상대성 이론을 포함합니다. 특수 상대성 이론은 중력이 없는 모든 물리적 현상에 적용되며, 일반 상대성 이론은 중력 법칙과 다른 자연의 힘들과의 관계를 설명합니다. 이 이론은 우주론적 및 천체 물리학적 영역에 적용됩니다.
+    </text>
 
-            Response:
-            The theory of relativity, developed by Albert Einstein, encompasses two main theories: special relativity and general relativity. Special
-            relativity applies to all physical phenomena in the absence of gravity, while general relativity explains the law of gravitation and its
-            relation to other forces of nature. The theory of relativity is based on the concept of "relative theory," as introduced by Max Planck in
-            1906. It is a fundamental theory in physics that has revolutionized our understanding of the universe.
-            \`
-            </example>
+    <query>
+    요약해주세요
+    </query>
 
-            Everything below is the actual data you will be working with. Good luck!
+    Response:
+    상대성 이론은 알버트 아인슈타인에 의해 개발된 두 가지 주요 이론, 즉 특수 상대성 이론과 일반 상대성 이론을 포함합니다. 특수 상대성 이론은 중력이 없는 모든 물리적 현상에 적용되며, 일반 상대성 이론은 중력 법칙과 다른 자연의 힘들과의 관계를 설명합니다. 상대성 이론은 1906년 막스 플랑크가 사용한 "상대적 이론"이라는 개념을 기반으로 하며, 우주에 대한 우리의 이해를 혁신적으로 변화시킨 중요한 이론입니다.
+    \`
+    </example>
 
-            <query>
-            ${question}
-            </query>
+    아래는 실제로 작업할 데이터입니다. 행운을 빕니다!
 
-            <text>
-            ${doc.pageContent}
-            </text>
+    <query>
+    ${question}
+    </query>
 
-            Make sure to answer the query in the summary.
-          `);
+    <text>
+    ${doc.pageContent}
+    </text>
 
+    요약에서 쿼리에 대한 답변을 반드시 포함시켜 주세요.
+    `);
             const document = new Document({
               pageContent: res.content as string,
               metadata: {

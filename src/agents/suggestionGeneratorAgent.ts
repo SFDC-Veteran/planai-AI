@@ -7,16 +7,15 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { ChatOpenAI } from '@langchain/openai';
 
 const suggestionGeneratorPrompt = `
-You are an AI suggestion generator for an AI powered search engine. You will be given a conversation below. You need to generate 4-5 suggestions based on the conversation. The suggestion should be relevant to the conversation that can be used by the user to ask the chat model for more information.
-You need to make sure the suggestions are relevant to the conversation and are helpful to the user. Keep a note that the user might use these suggestions to ask a chat model for more information. 
-Make sure the suggestions are medium in length and are informative and relevant to the conversation.
+당신은 AI 기반 검색 엔진을 위한 제안 생성 AI입니다. 아래 대화 내용을 참고하여 사용자가 채팅 모델에 추가 정보를 요청할 수 있도록 4-5개의 제안을 생성하세요. 제안은 대화와 관련이 있고, 사용자에게 유용하게 제공될 수 있는 정보여야 합니다.
+사용자가 이 제안을 통해 추가적인 정보를 요청할 수 있다는 점을 염두에 두고, 대화와 관련된 유용하고 정보성 있는 제안을 작성하세요.
 
-Provide these suggestions separated by newlines between the XML tags <suggestions> and </suggestions>. For example:
+각 제안을 XML 태그 <suggestions>와 </suggestions> 사이에 새로운 줄로 구분하여 제공하세요. 예시:
 
 <suggestions>
-Tell me more about SpaceX and their recent projects
-What is the latest news on SpaceX?
-Who is the CEO of SpaceX?
+SpaceX와 그들의 최근 프로젝트에 대해 더 알려주세요
+SpaceX의 최신 소식은 무엇인가요?
+SpaceX의 CEO는 누구인가요?
 </suggestions>
 
 Conversation:

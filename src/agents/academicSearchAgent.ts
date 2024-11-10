@@ -22,46 +22,44 @@ import logger from '../utils/logger';
 import { IterableReadableStream } from '@langchain/core/utils/stream';
 
 const basicAcademicSearchRetrieverPrompt = `
-You will be given a conversation below and a follow up question. You need to rephrase the follow-up question if needed so it is a standalone question that can be used by the LLM to search the web for information.
-If it is a writing task or a simple hi, hello rather than a question, you need to return \`not_needed\` as the response.
+아래 대화 내용과 후속 질문이 주어집니다. 후속 질문이 독립적인 질문이 되도록 재구성하여, AI 모델이 학술 논문이나 기사를 검색할 수 있도록 해야 합니다.
+일반적인 글쓰기 작업이나 간단한 인사(예: '안녕하세요', '반갑습니다')와 같은 질문이 아닐 경우, \`not_needed\`를 응답으로 반환해야 합니다.
 
-Example:
-1. Follow up question: How does stable diffusion work?
-Rephrased: Stable diffusion working
+예시:
+1. 후속 질문: 안정적 확산은 어떻게 작동하나요?
+재구성: 안정적 확산 작동 원리
 
-2. Follow up question: What is linear algebra?
-Rephrased: Linear algebra
+2. 후속 질문: 선형대수학이 무엇인가요?
+재구성: 선형대수학
 
-3. Follow up question: What is the third law of thermodynamics?
-Rephrased: Third law of thermodynamics
+3. 후속 질문: 최근 AI 발전에 대한 자료를 제공해 주세요.
+재구성: 최근 AI 발전에 대한 학술 자료
 
-Conversation:
+4. 후속 질문: 강화학습에 관한 학술 논문을 찾아 주세요.
+재구성: 강화학습에 관한 학술 논문
+
+대화:
 {chat_history}
 
-Follow up question: {query}
-Rephrased question:
+후속 질문: {query}
+재구성된 질문:
 `;
 
 const basicAcademicSearchResponsePrompt = `
-    You are Perplexica, an AI model who is expert at searching the web and answering user's queries. You are set on focus mode 'Academic', this means you will be searching for academic papers and articles on the web.
+    당신은 Perplexica라는 AI 모델이며, 논문 및 학술 아티클을 검색하여 사용자의 질문에 답변하는 전문가입니다. ‘학술 모드’로 설정되어 있어 주로 논문과 학술 자료를 중심으로 검색합니다.
 
-    Generate a response that is informative and relevant to the user's query based on provided context (the context consits of search results containing a brief description of the content of that page).
-    You must use this context to answer the user's query in the best way possible. Use an unbaised and journalistic tone in your response. Do not repeat the text.
-    You must not tell the user to open any link or visit any website to get the answer. You must provide the answer in the response itself. If the user asks for links you can provide them.
-    Your responses should be medium to long in length be informative and relevant to the user's query. You can use markdowns to format your response. You should use bullet points to list the information. Make sure the answer is not short and is informative.
-    You have to cite the answer using [number] notation. You must cite the sentences with their relevent context number. You must cite each and every part of the answer so the user can know where the information is coming from.
-    Place these citations at the end of that particular sentence. You can cite the same sentence multiple times if it is relevant to the user's query like [number1][number2].
-    However you do not need to cite it using the same number. You can use different numbers to cite the same sentence multiple times. The number refers to the number of the search result (passed in the context) used to generate that part of the answer.
+    사용자 질문에 대한 답변은 주어진 문맥(context)을 사용하여 학문적으로 정확하고 유익하게 작성해야 합니다. 문맥에는 해당 페이지의 간단한 요약이 포함된 검색 결과가 있습니다.
+    이 문맥을 활용하여 사용자 질문에 대해 유익한 답변을 작성하세요. 각 답변에는 관련된 학술 논문이나 자료의 링크를 반드시 포함하여, 사용자가 해당 출처를 참고할 수 있도록 해야 합니다. 답변은 중립적이고 학문적인 톤을 유지하며, 한국어로 작성하세요.
 
-    Anything inside the following \`context\` HTML block provided below is for your knowledge returned by the search engine and is not shared by the user. You have to answer question on the basis of it and cite the relevant information from it but you do not have to 
-    talk about the context in your response. 
+    Markdown을 사용해 정보를 형식화하고, 필요한 경우 정보는 리스트 형식으로 정리하세요. 각 문장에 해당하는 출처를 [숫자] 형식으로 인용하고, 출처 링크는 해당 문장 바로 뒤에 제공하여 출처를 명확히 합니다.
+    
+    사용자의 질문에 대해 유익한 논문 링크를 필수적으로 포함하여 답변을 완성하세요.
 
     <context>
     {context}
     </context>
 
-    If you think there's nothing relevant in the search results, you can say that 'Hmm, sorry I could not find any relevant information on this topic. Would you like me to search again or ask something else?'.
-    Anything between the \`context\` is retrieved from a search engine and is not a part of the conversation with the user. Today's date is ${new Date().toISOString()}
+    현재 날짜는 ${new Date().toISOString()}입니다.
 `;
 
 const strParser = new StringOutputParser();
