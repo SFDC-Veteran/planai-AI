@@ -33,9 +33,9 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd /home/ec2-user/app
-            docker build -f backend.dockerfile -t itzcrazykns1337/perplexica-backend:latest .  # backend 이미지 빌드
-            docker build -f app.dockerfile -t itzcrazykns1337/perplexica-frontend:latest .  # frontend 이미지 빌드
-            docker-compose up -d
+            docker build -f backend.dockerfile -t sewook321/planai-backend:latest .  # backend 이미지 빌드
+            docker build -f app.dockerfile -t sewook321/planai-frontend:latest .  # frontend 이미지 빌드
+            docker-compose up -d  # 백엔드와 프론트엔드 서비스를 백그라운드에서 실행
 
       - name: Push Docker images to Docker Hub
         uses: docker/login-action@v2
@@ -45,10 +45,10 @@ jobs:
 
       - name: Push Backend Image
         run: |
-          docker tag itzcrazykns1337/perplexica-backend:latest ${{ secrets.DOCKER_USERNAME }}/perplexica-backend:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/perplexica-backend:latest
+          docker tag sewook321/planai-backend:latest ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
 
       - name: Push Frontend Image
         run: |
-          docker tag itzcrazykns1337/perplexica-frontend:latest ${{ secrets.DOCKER_USERNAME }}/perplexica-frontend:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/perplexica-frontend:latest
+          docker tag sewook321/planai-frontend:latest ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
