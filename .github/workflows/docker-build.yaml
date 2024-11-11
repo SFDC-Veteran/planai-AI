@@ -54,4 +54,4 @@ jobs:
             docker rmi ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
-            docker-compose up -d
+            docker-compose -f docker-compose.yaml up -d
