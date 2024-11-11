@@ -33,13 +33,11 @@ jobs:
 
       - name: Build and Push Backend Image
         run: |
-          docker build -f backend.dockerfile -t ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
+          docker buildx build -f backend.dockerfile -t ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest . --push
 
       - name: Build and Push Frontend Image
         run: |
-          docker build -f app.dockerfile -t ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest .
-          docker push ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
+          docker buildx build -f app.dockerfile -t ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest . --push
 
   deploy:
     runs-on: ubuntu-latest
