@@ -1,4 +1,4 @@
-name: Build & Push Docker Images to EC2
+name: Build & Push Docker Images to Docker Hub
 
 on:
   push:
@@ -25,30 +25,33 @@ jobs:
         with:
           install: true
 
-      - name: SSH to EC2 and Build Docker Image
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -f backend.dockerfile -t ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
+
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -f app.dockerfile -t ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest .
+          docker push ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: SSH to EC2 and Pull & Run Docker Images
         uses: appleboy/ssh-action@v0.1.0
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ec2-user/app
-            docker build -f backend.dockerfile -t sewook321/planai-backend:latest .  # backend 이미지 빌드
-            docker build -f app.dockerfile -t sewook321/planai-frontend:latest .  # frontend 이미지 빌드
-            docker-compose up -d  # 백엔드와 프론트엔드 서비스를 백그라운드에서 실행
-
-      - name: Push Docker images to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Backend Image
-        run: |
-          docker tag sewook321/planai-backend:latest ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
-
-      - name: Push Frontend Image
-        run: |
-          docker tag sewook321/planai-frontend:latest ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
-          docker push ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
+            docker-compose up -d
