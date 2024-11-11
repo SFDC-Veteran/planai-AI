@@ -38,10 +38,13 @@ export const searchSearxng = async (
     });
   }
 
-  const res = await axios.get(url.toString());
-
-  const results: SearxngSearchResult[] = res.data.results;
-  const suggestions: string[] = res.data.suggestions;
-
-  return { results, suggestions };
+  try {
+    const res = await axios.get(url.toString());
+    const results: SearxngSearchResult[] = res.data.results;
+    const suggestions: string[] = res.data.suggestions;
+    return { results, suggestions };
+  } catch (error) {
+    console.error('Error fetching from Searxng:', error);
+    throw error;
+  }
 };
