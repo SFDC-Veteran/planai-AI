@@ -59,7 +59,7 @@ export const loadOpenAIChatModels = async () => {
 };
 
 export const loadOpenAIEmbeddingsModels = async () => {
-  const openAIApiKey = "sk-None-Zbzmwah96vhjm0kOp5BWT3BlbkFJ4LiWWK6yy9SxY2PmAk4s";
+  const openAIApiKey = getOpenaiApiKey();
 
   if (!openAIApiKey) return {};
 
