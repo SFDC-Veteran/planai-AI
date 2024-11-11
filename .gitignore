@@ -35,5 +35,5 @@ logs/
 Thumbs.db
 
 # Db
-db.sqlite
+#db.sqlite
 #/searxng
