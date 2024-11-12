@@ -40,11 +40,12 @@ export const searchSearxng = async (
 
   try {
     const res = await axios.get(url.toString());
+    console.log(res);
     const results: SearxngSearchResult[] = res.data.results;
     const suggestions: string[] = res.data.suggestions;
     return { results, suggestions };
   } catch (error) {
-    console.error('Error fetching from Searxng:', error);
+    console.error(`Error fetching at${Date.now()} from Searxng:`, error);
     throw error;
   }
 };
