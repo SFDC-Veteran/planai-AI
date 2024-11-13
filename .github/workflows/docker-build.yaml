@@ -52,8 +52,6 @@ jobs:
           script: |
             cd app
             docker-compose -f docker-compose.yaml down
-            docker rmi ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
-            docker rmi ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/planai-backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/planai-frontend:latest
             docker-compose -f docker-compose.yaml up -d

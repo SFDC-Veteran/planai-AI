@@ -49,6 +49,14 @@ export const loadOpenAIChatModels = async () => {
           temperature: 0.7,
         }),
       },
+      'gpt-4o-2024-08-06' : {
+        displayName: 'GPT-4o-2024-08-06',
+        model: new ChatOpenAI({
+          openAIApiKey,
+          modelName: 'gpt-4o-2024-08-06',
+          temperature: 0.7,
+        })
+      }
     };
 
     return chatModels;
